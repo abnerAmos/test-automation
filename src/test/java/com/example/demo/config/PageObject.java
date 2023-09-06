@@ -5,7 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
-public abstract class PageObject {
+public class PageObject {
 
     protected WebDriver browser;
 
@@ -35,6 +35,4 @@ public abstract class PageObject {
     public void closeBrowser() {
         this.browser.quit();
     }
-
-    public abstract PageObject goToThisPage();
 }

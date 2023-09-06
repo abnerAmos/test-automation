@@ -2,8 +2,13 @@ package com.example.demo.config;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.markuputils.ExtentColor;
 import com.aventstack.extentreports.markuputils.MarkupHelper;
+import com.aventstack.extentreports.model.Media;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
@@ -17,6 +22,17 @@ public class Listener implements ITestListener {
 
     public static ExtentReports extentReports;
     public static ExtentTest test;
+
+    private static Exception ex;
+    private static Media media;
+
+    private Exception getException() {
+        return ex;
+    }
+
+    private Media getMedia() {
+        return media;
+    }
 
     // Método cria Status de LOG com descrição dos testes
     public static void testStart(String nameTest, String description, String author, String category) {
@@ -45,8 +61,7 @@ public class Listener implements ITestListener {
 
     @Override
     public void onTestFailure(ITestResult result) {
-        test.fail(MarkupHelper.createLabel("Teste falhou.", ExtentColor.RED));
-        test.fail(result.getThrowable());
+        test.fail(getException(), getMedia());
     }
 
     // Método é executado após a finalização de todos os testes de todas as classes
@@ -63,13 +78,22 @@ public class Listener implements ITestListener {
 
     // Método estático que captura os logs dos testes
     // PS. Só é executado caso um teste ja tenha sido iniciado, caso contrário retorna null
-    public static void logTest(String status, String log) {
-        if (status.equals("pass"))
-            test.pass(log);
-        if (status.equals("fail"))
-            test.fail(log);
-        if (status.equals("info"))
-            test.info(MarkupHelper.createLabel(log, ExtentColor.BLUE));
+    public static void logPass(String log) {
+        test.pass(log);
+    }
+
+    public static void logFail(WebDriver browser, Exception e, String log) {
+        ex = e;
+        media = MediaEntityBuilder.createScreenCaptureFromBase64String(takeScreenshot(browser)).build();
+        test.fail(log);
+    }
+
+    public static void logInfo(String log) {
+        test.info(MarkupHelper.createLabel(log, ExtentColor.BLUE));
+    }
+
+    public static String takeScreenshot(WebDriver browser) {
+        return ((TakesScreenshot)browser).getScreenshotAs(OutputType.BASE64);
     }
 
     private static String formatterNameUser(String nameUser) {
