@@ -23,6 +23,9 @@ public class Listener implements ITestListener {
     public static ExtentReports extentReports;
     public static ExtentTest test;
 
+    // Separa cada report em uma thread juntamente com os testes em thread.
+    private static final ThreadLocal<ExtentTest> thread = new ThreadLocal<>();
+
     private static Exception ex;
     private static Media media;
 
@@ -39,7 +42,8 @@ public class Listener implements ITestListener {
         test = extentReports.createTest(nameTest, description)
                 .assignAuthor(formatterNameUser(author))
                 .assignCategory(category);
-        test.info(MarkupHelper.createLabel("EXECUÇÃO DO MÉTODO INICIADO.", ExtentColor.BLUE));
+        thread.set(test);
+        thread.get().info(MarkupHelper.createLabel("EXECUÇÃO DO MÉTODO INICIADO.", ExtentColor.BLUE));
     }
 
     // Método é executado uma vez antes dos testes, ao qual cria o arquivo HTML.
@@ -51,12 +55,12 @@ public class Listener implements ITestListener {
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        test.skip(MarkupHelper.createLabel("Teste desabilitado.", ExtentColor.ORANGE));
+        thread.get().skip(MarkupHelper.createLabel("Teste desabilitado.", ExtentColor.ORANGE));
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        test.pass(MarkupHelper.createLabel("Teste concluído com sucesso.", ExtentColor.GREEN));
+        thread.get().pass(MarkupHelper.createLabel("Teste concluído com sucesso.", ExtentColor.GREEN));
     }
 
     @Override
@@ -79,17 +83,17 @@ public class Listener implements ITestListener {
     // Método estático que captura os logs dos testes
     // PS. Só é executado caso um teste ja tenha sido iniciado, caso contrário retorna null
     public static void logPass(String log) {
-        test.pass(log);
+        thread.get().pass(log);
     }
 
     public static void logFail(WebDriver browser, Exception e, String log) {
         ex = e;
         media = MediaEntityBuilder.createScreenCaptureFromBase64String(takeScreenshot(browser)).build();
-        test.fail(log);
+        thread.get().fail(log);
     }
 
     public static void logInfo(String log) {
-        test.info(MarkupHelper.createLabel(log, ExtentColor.BLUE));
+        thread.get().info(MarkupHelper.createLabel(log, ExtentColor.BLUE));
     }
 
     public static String takeScreenshot(WebDriver browser) {
